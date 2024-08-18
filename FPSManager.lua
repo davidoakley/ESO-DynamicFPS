@@ -68,7 +68,7 @@ local function IdleCheck()
     local function IsPlayerIdle()
         -- Check if in combat
         if IsUnitInCombat("player") then return false end
-        -- Compareing current plosition and heading with data of last run
+        -- Comparing current position and heading with data of last run
         local x_new, y_new, h_new = GetMapPlayerPosition("player")
         local heading_new = GetPlayerCameraHeading()
 
@@ -83,14 +83,14 @@ local function IdleCheck()
     if not IsPlayerIdle() then
       idleTimeMS = 0
       isIdle = false
-      -- d("FPSManager: not idle")
+      logger:Debug("FPSManager: not idle")
       if hasFocus then
         setActive(true, IdleCheck)
       end
     else
       if not isIdle then
         idleTimeMS = idleTimeMS + ACTIVE_CHECK_DELAY_MS
-        -- d("FPSManager: Idle "..idleTimeMS.."ms")
+        logger:Debug("FPSManager: Idle "..idleTimeMS.."ms")
         if idleTimeMS >= IDLE_DELAY_MS then
           isIdle = true
           if hasFocus then
@@ -120,7 +120,7 @@ end
 function FPSManager.Initialize()
   -- FPSManager.saved = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, FPSManager.default)
 
-  logger:Debug("FPSManager initialising")
+  logger:Info("FPSManager initialising")
   setActive(true, IdleCheck)
 
   EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, OnCombatState)
