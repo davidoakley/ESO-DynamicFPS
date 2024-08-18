@@ -1,13 +1,13 @@
-## Title: Idle FPS Saver
+## Title: FPS Manager
 ## Description: Reduces the FPS when your game is idle
 ## Author: SirNightstorm (PC-EU)
 ## APIVersion: 101042
 ## Version: 0.0.1
-## DependsOn: LibCustomMenu
+## DependsOn: LibDebugLogger>=180
 ## OptionalDependsOn: pchat
-## SavedVariables: IdleFPSSaver_SavedVariables
+## SavedVariables: FPSManager_SavedVariables
 
-IdleFPSSaver.lua
+FPSManager.lua
 
 # This Add-on is not created by, affiliated with, or sponsored by, ZeniMax
 # Media Inc. or its affiliates. The Elder Scrolls® and related logos are
