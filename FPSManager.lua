@@ -105,10 +105,15 @@ end
 
 local function OnCombatState(_, inCombat)
   isInCombat = inCombat
+  idleTimeMS = 0
+  isIdle = false
   setActive(true, IdleCheck)
 end
 
-local function setActiveTrue()
+local function setActiveTrue(eventCode)
+  --logger:Debug("Received event "..eventCode)
+  idleTimeMS = 0
+  isIdle = false
   setActive(true, IdleCheck)
 end
 
@@ -122,7 +127,9 @@ function FPSManager.Initialize()
 
   EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE, setActiveTrue)
   EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_MouseDown", EVENT_GLOBAL_MOUSE_DOWN, setActiveTrue)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."MouseUp", EVENT_GLOBAL_MOUSE_UP, setActiveTrue)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_MouseUp", EVENT_GLOBAL_MOUSE_UP, setActiveTrue)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_LayerPopped", EVENT_ACTION_LAYER_POPPED, setActiveTrue)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_LayerPushed", EVENT_ACTION_LAYER_PUSHED, setActiveTrue)
 end
 
 
