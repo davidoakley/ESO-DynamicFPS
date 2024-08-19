@@ -1,135 +1,157 @@
-FPSManager = {}
-FPSManager.name = "FPSManager"
-FPSManager.svName = "FPSManager_SavedVariables"
+FPSManager = {
+  name            = "FPSManager",           -- Matches folder and Manifest file names.
+  -- version         = "1.0",                -- A nuisance to match to the Manifest.
+  author          = "SirNightstorm",
+  color           = "DDFFEE",             -- Used in menu titles and so on.
+  menuName        = "FPS Manager",          -- A UNIQUE identifier for menu object.
+  svName          = "FPSManager_SavedVariables",
+}
+
+-- Default settings.
+local defaultSavedVars = {
+  -- firstLoad = true,                   -- First time the addon is loaded ever.
+  -- accountWide = false,                -- Load settings from account savedVars, instead of character.
+  activeFPS = 60,
+  combatFPS = 165,
+  idleFPS = 30,
+  afkFPS = 10,
+
+  idleDelay = 30,
+  afkDelay = 180
+}
 
 local logger = LibDebugLogger(FPSManager.name)
+FPSManager.logger = logger
 
-local ACTIVE_FPS = 60
-local ACTIVE_CHECK_DELAY_MS = 5 * 1000
-
-local IDLE_DELAY_MS = 60 * 1000
-
-local IDLE_FPS = 10
+local ACTIVE_CHECK_DELAY_MS = 1000
 local IDLE_CHECK_DELAY_MS = 200
 
-local COMBAT_FPS = 165
-
 local currentFPS = 0
-local idleTimeMS = 0
+local currentState = nil
+local idleTimeMS = 0 -- TODO: Use GetGameTimeSeconds()
 local hasFocus = true
 local isIdle = false
 local isInCombat = false
 
-local function setActive(active, callback)
+function FPSManager.SetActive()
+  isIdle = false
+  idleTimeMS = 0
+  FPSManager.UpdateState()
+end
+
+function FPSManager.SetIdle()
+  isIdle = true
+  FPSManager.UpdateState()
+end
+
+function FPSManager.ForceUpdateState()
+  currentState = nil
+end
+
+function FPSManager.UpdateState()
   local newFPS
   local newDelayMS
-  local reason
+  local state
   local r, g, b, a = 1, 1, 1, 1
 
-  if active then
-    if isInCombat then
-      newFPS = COMBAT_FPS
-      newDelayMS = 0
-      reason = "combat"
-      r, g, b = 1, 0.5, 0.5
-    else
-      newFPS = ACTIVE_FPS
-      newDelayMS = ACTIVE_CHECK_DELAY_MS
-      reason = "active"
-      r, g, b, a = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
-    end
-    idleTimeMS = 0
-    isIdle = false
+  if isInCombat then
+    newFPS = FPSManager.savedVars.combatFPS
+    newDelayMS = 0
+    state = "combat"
+    r, g, b = 1, 0.5, 0.5
+  elseif not isIdle then
+    newFPS = FPSManager.savedVars.activeFPS
+    newDelayMS = ACTIVE_CHECK_DELAY_MS
+    state = "active"
+    r, g, b, a = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
   else
-    newFPS = IDLE_FPS
+    newFPS = FPSManager.savedVars.idleFPS
     newDelayMS = IDLE_CHECK_DELAY_MS
-    reason = "idle"
+    state = "idle"
     r, g, b = 0.75, 1, 0.65
   end
-  if newFPS ~= currentFPS then
+
+  if state ~= currentState then
     EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
     ZO_PerformanceMetersFramerateMeterLabel:SetColor(r, g, b, a)
     if newDelayMS > 0 then
-      logger:Debug("FPSManager: Setting FPS to "..reason..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
-      EVENT_MANAGER:RegisterForUpdate(FPSManager.name.."_CheckIdle", newDelayMS, callback)
+      logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
+      EVENT_MANAGER:RegisterForUpdate(FPSManager.name.."_Update", newDelayMS, FPSManager.Update)
     else
-      logger:Debug("FPSManager: Setting FPS to "..reason..": "..newFPS.."fps")
+      logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps")
     end
     currentFPS = newFPS
+    currentState = state
   end
 end
 
 local x_old, y_old, h_old = GetMapPlayerPosition("player")
 local heading_old = GetPlayerCameraHeading()
-local function IdleCheck()
-    -- d("FPSManager: IdleCheck")
+function FPSManager.Update()
+  -- logger:Debug("FPSManager: IdleCheck")
 
-    local function IsPlayerIdle()
-        -- Check if in combat
-        if IsUnitInCombat("player") then return false end
-        -- Comparing current position and heading with data of last run
-        local x_new, y_new, h_new = GetMapPlayerPosition("player")
-        local heading_new = GetPlayerCameraHeading()
+  local function isPlayerIdle()
+      -- Check if in combat
+      if IsUnitInCombat("player") then return false end
 
-        if x_old == x_new and y_old == y_new and h_old == h_new and heading_new == heading_old then
-            return true
-        else
-            x_old, y_old, h_old, heading_old = x_new, y_new, h_new, heading_new
-            return false
-        end
-    end
+      if not hasFocus then return true end
 
-    if not IsPlayerIdle() then
-      idleTimeMS = 0
-      isIdle = false
-      logger:Debug("FPSManager: not idle")
-      if hasFocus then
-        setActive(true, IdleCheck)
+      -- Comparing current position and heading with data of last run
+      local x_new, y_new, h_new = GetMapPlayerPosition("player")
+      local heading_new = GetPlayerCameraHeading()
+
+      if x_old == x_new and y_old == y_new and h_old == h_new and heading_new == heading_old then
+          return true
+      else
+          x_old, y_old, h_old, heading_old = x_new, y_new, h_new, heading_new
+          return false
       end
-    else
-      if not isIdle then
-        idleTimeMS = idleTimeMS + ACTIVE_CHECK_DELAY_MS
-        logger:Debug("FPSManager: Idle "..idleTimeMS.."ms")
-        if idleTimeMS >= IDLE_DELAY_MS then
-          isIdle = true
-          if hasFocus then
-            setActive(false, IdleCheck)
-          end
-        end
-      -- else
-      --   d("FPSManager: already idle")
-      end
+  end
+
+  if not isPlayerIdle() then
+    --logger:Debug("FPSManager: not idle")
+    FPSManager.SetActive()
+  elseif not isIdle then
+    idleTimeMS = idleTimeMS + ACTIVE_CHECK_DELAY_MS
+    logger:Debug("FPSManager: Idle "..idleTimeMS.."ms")
+    if idleTimeMS >= FPSManager.savedVars.idleDelay*1000 then
+      FPSManager.SetIdle()
     end
+  end
 end
 
 local function OnCombatState(_, inCombat)
   isInCombat = inCombat
   idleTimeMS = 0
   isIdle = false
-  setActive(true, IdleCheck)
+  FPSManager.SetActive()
 end
 
-local function setActiveTrue(eventCode)
-  --logger:Debug("Received event "..eventCode)
-  idleTimeMS = 0
-  isIdle = false
-  setActive(true, IdleCheck)
+function FPSManager.SetActiveOnEvent(eventName, event)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, FPSManager.SetActive)
 end
 
 function FPSManager.Initialize()
-  -- FPSManager.saved = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, FPSManager.default)
+  FPSManager.savedVars = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, defaultSavedVars)
 
   logger:Info("FPSManager initialising")
-  setActive(true, IdleCheck)
+
+  -- Settings menu in Settings.lua.
+  FPSManager.LoadSettings()
+
+  FPSManager.SetActive()
 
   EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, OnCombatState)
 
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE, setActiveTrue)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_MouseDown", EVENT_GLOBAL_MOUSE_DOWN, setActiveTrue)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_MouseUp", EVENT_GLOBAL_MOUSE_UP, setActiveTrue)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_LayerPopped", EVENT_ACTION_LAYER_POPPED, setActiveTrue)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_LayerPushed", EVENT_ACTION_LAYER_PUSHED, setActiveTrue)
+  FPSManager.SetActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
+  FPSManager.SetActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
+  FPSManager.SetActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
+  FPSManager.SetActiveOnEvent("LayerPopped", EVENT_ACTION_LAYER_POPPED)
+  FPSManager.SetActiveOnEvent("LayerPushed", EVENT_ACTION_LAYER_PUSHED)
+  FPSManager.SetActiveOnEvent("EndFastTravel", EVENT_END_FAST_TRAVEL_INTERACTION)
+  FPSManager.SetActiveOnEvent("EndFastTravelKeep", EVENT_END_FAST_TRAVEL_KEEP_INTERACTION)
+  FPSManager.SetActiveOnEvent("ClientInteract", EVENT_CLIENT_INTERACT_RESULT)
 end
 
 
