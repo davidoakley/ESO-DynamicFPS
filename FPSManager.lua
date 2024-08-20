@@ -17,7 +17,9 @@ local defaultSavedVars = {
   afkFPS = 10,
 
   idleDelay = 30,
-  afkDelay = 180
+  afkDelay = 180,
+
+  showAlerts = false
 }
 
 local logger = LibDebugLogger(FPSManager.name)
@@ -31,6 +33,10 @@ local currentState = nil
 local lastActiveTime = 0
 local hasFocus = true
 local isInCombat = false
+
+local function ucFirst(str)
+  return (str:gsub("^%l", string.upper))
+end
 
 function FPSManager.SetActive()
   lastActiveTime = GetGameTimeSeconds()
@@ -83,6 +89,10 @@ function FPSManager.SetState(state)
       EVENT_MANAGER:RegisterForUpdate(FPSManager.name.."_Update", newDelayMS, FPSManager.Update)
     else
       logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps")
+    end
+
+    if FPSManager.savedVars.showAlerts then
+      ZO_Alert(UI_ALERT_CATEGORY_ALERT, nil, "FPSManager: "..ucFirst(state))
     end
     -- currentFPS = newFPS
     currentState = state

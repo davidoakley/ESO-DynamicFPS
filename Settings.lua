@@ -95,5 +95,24 @@ function FPSManager.LoadSettings()
         default = 30,	--(optional)
     })
 
+    table.insert(optionsTable, {
+        type = "header",
+        name = ZO_HIGHLIGHT_TEXT:Colorize("Other Settings"),
+        width = "full",	--or "half" (optional)
+    })
+
+    table.insert(
+        optionsTable,
+        {
+            type = "checkbox",
+            name = "Show alerts",
+            tooltip = "Show an alert in the top-right corner of the screen when FPSManager's state changes",
+            getFunc = function() return FPSManager.savedVars.showAlerts end,
+            setFunc = function(value) FPSManager.savedVars.showAlerts = value end,
+            width = "full", --or "half",
+            requiresReload = false,
+        }
+    )
+
     LAM:RegisterOptionControls(FPSManager.menuName, optionsTable)
 end
