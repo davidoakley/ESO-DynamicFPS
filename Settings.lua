@@ -78,14 +78,14 @@ function FPSManager.LoadSettings()
         type = "description",
         -- title = "Idle Timeouts",	--(optional)
         title = nil,	--(optional)
-        text = "Choose how many seconds before FPS Manager will switch your game to a lower FPS",
+        text = "Choose how long before FPS Manager will switch your game to a lower FPS",
         width = "full",	--or "half" (optional)
     })
 
     table.insert(optionsTable, {
         type = "slider",
-        name = "Idle Timeout",
-        tooltip = "Seconds before FPS Manager will enter Idle state",
+        name = "Idle Timeout (seconds)",
+        tooltip = "How long before FPS Manager will enter Idle state",
         min = 15,
         max = 20*60,
         step = 15,	--(optional)
