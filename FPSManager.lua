@@ -1,10 +1,10 @@
 FPSManager = {
-  name            = "FPSManager",           -- Matches folder and Manifest file names.
-  -- version         = "1.0",                -- A nuisance to match to the Manifest.
-  author          = "SirNightstorm",
-  color           = "DDFFEE",             -- Used in menu titles and so on.
-  menuName        = "FPS Manager",          -- A UNIQUE identifier for menu object.
-  svName          = "FPSManager_SavedVariables",
+  name = "FPSManager",           -- Matches folder and Manifest file names.
+  version = "0.1.0",                -- A nuisance to match to the Manifest.
+  author = "SirNightstorm",
+  color = "DDFFEE",             -- Used in menu titles and so on.
+  menuName = "FPS Manager",          -- A UNIQUE identifier for menu object.
+  svName = "FPSManager_SavedVariables",
 }
 
 -- Default settings.

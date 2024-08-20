@@ -2,7 +2,7 @@
 ## Description: Reduces the FPS when your game is idle
 ## Author: SirNightstorm (PC-EU)
 ## APIVersion: 101042
-## Version: 0.0.1
+## Version: 0.1.0
 ## DependsOn: LibDebugLogger>=180
 ## OptionalDependsOn: pchat
 ## SavedVariables: FPSManager_SavedVariables
