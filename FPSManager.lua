@@ -28,12 +28,12 @@ local IDLE_CHECK_DELAY_MS = 200
 
 -- local currentFPS = 0
 local currentState = nil
-local idleTimeMS = 0 -- TODO: Use GetGameTimeSeconds()
+local lastActiveTime = 0
 local hasFocus = true
 local isInCombat = false
 
 function FPSManager.SetActive()
-  idleTimeMS = 0
+  lastActiveTime = GetGameTimeSeconds()
   FPSManager.UpdateState()
 end
 
@@ -46,7 +46,7 @@ function FPSManager.UpdateState()
 
   if isInCombat then
     state = "combat"
-  elseif idleTimeMS < FPSManager.savedVars.idleDelay*1000 then
+  elseif GetGameTimeSeconds() < lastActiveTime + FPSManager.savedVars.idleDelay then
     state = "active"
   else
     state = "idle"
@@ -112,19 +112,19 @@ function FPSManager.Update()
       end
   end
 
+  local gameTime = GetGameTimeSeconds()
   if not isPlayerIdle() then
     --logger:Debug("FPSManager: not idle")
-    idleTimeMS = 0
+    lastActiveTime = gameTime
   else
-    idleTimeMS = idleTimeMS + ACTIVE_CHECK_DELAY_MS
-    logger:Debug("FPSManager: Idle "..idleTimeMS.."ms")
+    logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
   end
   FPSManager.UpdateState()
 end
 
 local function onCombatState(_, inCombat)
   isInCombat = inCombat
-  idleTimeMS = 0
+  lastActiveTime = GetGameTimeSeconds()
   FPSManager.SetActive()
 end
 
