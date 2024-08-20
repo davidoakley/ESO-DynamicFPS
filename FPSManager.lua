@@ -34,6 +34,10 @@ local lastActiveTime = 0
 local hasFocus = true
 local isInCombat = false
 
+local activeLabelColour = ZO_TOOLTIP_DEFAULT_COLOR
+local idleLabelColour = ZO_ColorDef:New("c0ffa6")
+local combatLabelColour = ZO_ColorDef:New("ff8080")
+
 local function ucFirst(str)
   return (str:gsub("^%l", string.upper))
 end
@@ -61,29 +65,31 @@ function FPSManager.UpdateState()
   FPSManager.SetState(state)
 end
 
+---Update FPSManager.currentState, and make any necessary game setting changes
+---@param state string The state to update to
 function FPSManager.SetState(state)
   if state ~= currentState then
     local newFPS
     local newDelayMS
-    local r, g, b, a = 1, 1, 1, 1
+    local colour
   
     if state == "combat" then
       newFPS = FPSManager.savedVars.combatFPS
       newDelayMS = 0
-      r, g, b = 1, 0.5, 0.5
+      colour = combatLabelColour
     elseif state == "active" then
       newFPS = FPSManager.savedVars.activeFPS
       newDelayMS = ACTIVE_CHECK_DELAY_MS
-      r, g, b, a = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
+      colour = activeLabelColour
     elseif state == "idle" then
       newFPS = FPSManager.savedVars.idleFPS
       newDelayMS = IDLE_CHECK_DELAY_MS
-      r, g, b = 0.75, 1, 0.65
+      colour = idleLabelColour
     end
   
     EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
-    ZO_PerformanceMetersFramerateMeterLabel:SetColor(r, g, b, a)
+    ZO_PerformanceMetersFramerateMeterLabel:SetColor(colour:UnpackRGB())
     if newDelayMS > 0 then
       logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
       EVENT_MANAGER:RegisterForUpdate(FPSManager.name.."_Update", newDelayMS, FPSManager.Update)
