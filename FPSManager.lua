@@ -26,21 +26,14 @@ FPSManager.logger = logger
 local ACTIVE_CHECK_DELAY_MS = 1000
 local IDLE_CHECK_DELAY_MS = 200
 
-local currentFPS = 0
+-- local currentFPS = 0
 local currentState = nil
 local idleTimeMS = 0 -- TODO: Use GetGameTimeSeconds()
 local hasFocus = true
-local isIdle = false
 local isInCombat = false
 
 function FPSManager.SetActive()
-  isIdle = false
   idleTimeMS = 0
-  FPSManager.UpdateState()
-end
-
-function FPSManager.SetIdle()
-  isIdle = true
   FPSManager.UpdateState()
 end
 
@@ -49,29 +42,39 @@ function FPSManager.ForceUpdateState()
 end
 
 function FPSManager.UpdateState()
-  local newFPS
-  local newDelayMS
   local state
-  local r, g, b, a = 1, 1, 1, 1
 
   if isInCombat then
-    newFPS = FPSManager.savedVars.combatFPS
-    newDelayMS = 0
     state = "combat"
-    r, g, b = 1, 0.5, 0.5
-  elseif not isIdle then
-    newFPS = FPSManager.savedVars.activeFPS
-    newDelayMS = ACTIVE_CHECK_DELAY_MS
+  elseif idleTimeMS < FPSManager.savedVars.idleDelay*1000 then
     state = "active"
-    r, g, b, a = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
   else
-    newFPS = FPSManager.savedVars.idleFPS
-    newDelayMS = IDLE_CHECK_DELAY_MS
     state = "idle"
-    r, g, b = 0.75, 1, 0.65
   end
 
+  FPSManager.SetState(state)
+end
+
+function FPSManager.SetState(state)
   if state ~= currentState then
+    local newFPS
+    local newDelayMS
+    local r, g, b, a = 1, 1, 1, 1
+  
+    if state == "combat" then
+      newFPS = FPSManager.savedVars.combatFPS
+      newDelayMS = 0
+      r, g, b = 1, 0.5, 0.5
+    elseif state == "active" then
+      newFPS = FPSManager.savedVars.activeFPS
+      newDelayMS = ACTIVE_CHECK_DELAY_MS
+      r, g, b, a = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
+    elseif state == "idle" then
+      newFPS = FPSManager.savedVars.idleFPS
+      newDelayMS = IDLE_CHECK_DELAY_MS
+      r, g, b = 0.75, 1, 0.65
+    end
+  
     EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
     ZO_PerformanceMetersFramerateMeterLabel:SetColor(r, g, b, a)
@@ -81,7 +84,7 @@ function FPSManager.UpdateState()
     else
       logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps")
     end
-    currentFPS = newFPS
+    -- currentFPS = newFPS
     currentState = state
   end
 end
@@ -111,28 +114,25 @@ function FPSManager.Update()
 
   if not isPlayerIdle() then
     --logger:Debug("FPSManager: not idle")
-    FPSManager.SetActive()
-  elseif not isIdle then
+    idleTimeMS = 0
+  else
     idleTimeMS = idleTimeMS + ACTIVE_CHECK_DELAY_MS
     logger:Debug("FPSManager: Idle "..idleTimeMS.."ms")
-    if idleTimeMS >= FPSManager.savedVars.idleDelay*1000 then
-      FPSManager.SetIdle()
-    end
   end
+  FPSManager.UpdateState()
 end
 
-local function OnCombatState(_, inCombat)
+local function onCombatState(_, inCombat)
   isInCombat = inCombat
   idleTimeMS = 0
-  isIdle = false
   FPSManager.SetActive()
 end
 
-function FPSManager.SetActiveOnEvent(eventName, event)
+local function setActiveOnEvent(eventName, event)
   EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, FPSManager.SetActive)
 end
 
-function FPSManager.Initialize()
+local function initialise()
   FPSManager.savedVars = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, defaultSavedVars)
 
   logger:Info("FPSManager initialising")
@@ -142,31 +142,25 @@ function FPSManager.Initialize()
 
   FPSManager.SetActive()
 
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, OnCombatState)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, onCombatState)
 
-  FPSManager.SetActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
-  FPSManager.SetActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
-  FPSManager.SetActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
-  FPSManager.SetActiveOnEvent("LayerPopped", EVENT_ACTION_LAYER_POPPED)
-  FPSManager.SetActiveOnEvent("LayerPushed", EVENT_ACTION_LAYER_PUSHED)
-  FPSManager.SetActiveOnEvent("EndFastTravel", EVENT_END_FAST_TRAVEL_INTERACTION)
-  FPSManager.SetActiveOnEvent("EndFastTravelKeep", EVENT_END_FAST_TRAVEL_KEEP_INTERACTION)
-  FPSManager.SetActiveOnEvent("ClientInteract", EVENT_CLIENT_INTERACT_RESULT)
+  setActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
+  setActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
+  setActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
+  setActiveOnEvent("LayerPopped", EVENT_ACTION_LAYER_POPPED)
+  setActiveOnEvent("LayerPushed", EVENT_ACTION_LAYER_PUSHED)
+  setActiveOnEvent("EndFastTravel", EVENT_END_FAST_TRAVEL_INTERACTION)
+  setActiveOnEvent("EndFastTravelKeep", EVENT_END_FAST_TRAVEL_KEEP_INTERACTION)
+  setActiveOnEvent("ClientInteract", EVENT_CLIENT_INTERACT_RESULT)
 end
 
-
--- Then we create an event handler function which will be called when the "addon loaded" event
--- occurs. We'll use this to initialize our addon after all of its resources are fully loaded.
-function FPSManager.OnAddOnLoaded(event, addonName)
+function FPSManager.OnAddOnLoaded(_, addonName)
   -- The event fires each time *any* addon loads - but we only care about when our own addon loads.
   if addonName ~= FPSManager.name then return end
 
-  FPSManager.Initialize()
+  initialise()
   --unregister the event again as our addon was loaded now and we do not need it anymore to be run for each other addon that will load
-  EVENT_MANAGER:UnregisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED) 
+  EVENT_MANAGER:UnregisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED)
 end
 
--- Finally, we'll register our event handler function to be called when the proper event occurs.
--->This event EVENT_ADD_ON_LOADED will be called for EACH of the addns/libraries enabled, this is why there needs to be a check against the addon name
--->within your callback function! Else the very first addon loaded would run your code + all following addons too.
 EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED, FPSManager.OnAddOnLoaded)
