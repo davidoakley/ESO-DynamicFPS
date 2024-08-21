@@ -98,7 +98,7 @@ function FPSManager.LoadSettings()
     table.insert(optionsTable, {
         type = "slider",
         name = "Idle Timeout (seconds)",
-        tooltip = "How long before entering the Idle state",
+        tooltip = "Time inactive before entering the Idle state",
         min = 15,
         max = 20*60,
         step = 15,	--(optional)
@@ -111,7 +111,7 @@ function FPSManager.LoadSettings()
     table.insert(optionsTable, {
         type = "slider",
         name = "AFK Timeout (seconds)",
-        tooltip = "How long to be in Idle before entering the AFK (away from keyboard) state",
+        tooltip = "Time inactive before entering the AFK (away from keyboard) state",
         min = 60,
         max = 20*60,
         step = 15,	--(optional)
