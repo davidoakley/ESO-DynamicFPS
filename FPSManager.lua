@@ -40,7 +40,8 @@ local isInDialog = false
 
 local activeLabelColour = ZO_TOOLTIP_DEFAULT_COLOR
 local idleLabelColour = ZO_ColorDef:New("c0ffa6")
-local combatLabelColour = ZO_ColorDef:New("ff8080")
+local afkLabelColour = ZO_ColorDef:New("66aaff")
+local combatLabelColour = ZO_ColorDef:New("ff9966")
 
 local function ucFirst(str)
   return (str:gsub("^%l", string.upper))
@@ -57,13 +58,17 @@ end
 
 function FPSManager.UpdateState()
   local state
+  local gameTime = GetGameTimeSeconds()
 
   if isInCombat then
     state = "combat"
-  elseif GetGameTimeSeconds() < lastActiveTime + FPSManager.savedVars.idleDelay or isInDialog then
+  elseif gameTime < lastActiveTime + FPSManager.savedVars.idleDelay or
+         (isInDialog and gameTime < lastActiveTime + FPSManager.savedVars.afkDelay) then
     state = "active"
-  else
+  elseif gameTime < lastActiveTime + FPSManager.savedVars.afkDelay then
     state = "idle"
+  else
+    state = "afk"
   end
 
   FPSManager.SetState(state)
@@ -89,6 +94,10 @@ function FPSManager.SetState(state)
       newFPS = FPSManager.savedVars.idleFPS
       newDelayMS = IDLE_CHECK_DELAY_MS
       colour = idleLabelColour
+    elseif state == "afk" then
+      newFPS = FPSManager.savedVars.afkFPS
+      newDelayMS = IDLE_CHECK_DELAY_MS
+      colour = afkLabelColour
     end
   
     EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
@@ -134,10 +143,10 @@ function FPSManager.Update()
 
   local gameTime = GetGameTimeSeconds()
   if not isPlayerIdle() then
-    --logger:Debug("FPSManager: not idle")
+    logger:Debug("FPSManager: not idle")
     lastActiveTime = gameTime
   else
-    -- logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
+    logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
   end
   FPSManager.UpdateState()
 end
