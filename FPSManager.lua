@@ -5,6 +5,12 @@ FPSManager = {
   color = "DDFFEE",             -- Used in menu titles and so on.
   menuName = "FPS Manager",          -- A UNIQUE identifier for menu object.
   svName = "FPSManager_SavedVariables",
+
+  isInCombat = false,
+  isInDialog = false,
+  hasFocus = true,
+  paused = false,
+  originalMinFrameTime = 0.01
 }
 
 -- Default settings.
@@ -35,10 +41,6 @@ local currentState = nil
 ---@type number
 local lastActiveTime = 0
 
-local hasFocus = true
-local isInCombat = false
-local isInDialog = false
-
 local activeLabelColour = ZO_TOOLTIP_DEFAULT_COLOR
 local idleLabelColour = ZO_ColorDef:New("c0ffa6")
 local afkLabelColour = ZO_ColorDef:New("66aaff")
@@ -61,11 +63,11 @@ function FPSManager.UpdateState()
   local state
   local inactiveTime = GetGameTimeSeconds() - lastActiveTime
 
-  if isInCombat then
+  if FPSManager.isInCombat then
     state = "combat"
   elseif inactiveTime >= FPSManager.savedVars.afkDelay then
     state = "afk"
-  elseif inactiveTime >= FPSManager.savedVars.idleDelay and not isInDialog then
+  elseif inactiveTime >= FPSManager.savedVars.idleDelay and not FPSManager.isInDialog then
     state = "idle"
   else
     state = "active"
@@ -77,6 +79,8 @@ end
 ---Update FPSManager.currentState, and make any necessary game setting changes
 ---@param state string The state to update to
 function FPSManager.SetState(state)
+  if FPSManager.paused then return end
+
   if state ~= currentState then
     local newFPS
     local newDelayMS
@@ -121,13 +125,14 @@ end
 local x_old, y_old, h_old = GetMapPlayerPosition("player")
 local heading_old = GetPlayerCameraHeading()
 function FPSManager.Update()
+  if FPSManager.paused then return end
   -- logger:Debug("FPSManager: IdleCheck")
 
   local function isPlayerIdle()
       -- Check if in combat
       if IsUnitInCombat("player") then return false end
 
-      if not hasFocus then return true end
+      if not FPSManager.hasFocus then return true end
 
       -- Comparing current position and heading with data of last run
       local x_new, y_new, h_new = GetMapPlayerPosition("player")
@@ -143,71 +148,27 @@ function FPSManager.Update()
 
   local gameTime = GetGameTimeSeconds()
   if not isPlayerIdle() then
-    logger:Debug("FPSManager: not idle")
+    --logger:Debug("FPSManager: not idle")
     lastActiveTime = gameTime
   else
-    logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
+    --logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
   end
   FPSManager.UpdateState()
 end
 
-local function onCombatState(_, inCombat)
-  isInCombat = inCombat
-  lastActiveTime = GetGameTimeSeconds()
-  FPSManager.SetActive()
-end
-
-local function onDialogBegin(_, optionCount)
-  isInDialog = true
-  logger:Debug("FPSManager: onDialogBegin "..optionCount)
-  FPSManager.SetActive()
-end
-
-local function onDialogEnd(_)
-  isInDialog = false
-  logger:Debug("FPSManager: onDialogEnd")
-  FPSManager.SetActive()
-end
-
-local function onDialogUpdate(_)
-  logger:Debug("FPSManager: onDialogUpdate")
-  FPSManager.SetActive()
-end
-
-local function setActiveOnEvent(eventName, event)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, function()
-    -- logger:Debug("FPSManager: event "..eventName)
-    FPSManager.SetActive()
-  end)
-end
 
 local function initialise()
   FPSManager.savedVars = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, defaultSavedVars)
 
-  logger:Info("FPSManager initialising")
+  FPSManager.originalMinFrameTime = GetCVar("MinFrameTime.2")
+  logger:Info("FPSManager initialising; original MinFrameTime = "..FPSManager.originalMinFrameTime)
 
   -- Settings menu in Settings.lua.
   FPSManager.LoadSettings()
 
   FPSManager.SetActive()
 
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, onCombatState)
-
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_BEGIN, onDialogBegin)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CONVERSATION_UPDATED, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_OFFERED, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_COMPLETE_DIALOG, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_END, onDialogEnd)
-
-  setActiveOnEvent("PlayerActivated", EVENT_PLAYER_ACTIVATED)
-  setActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
-  setActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
-  setActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
-  setActiveOnEvent("LayerPopped", EVENT_ACTION_LAYER_POPPED)
-  setActiveOnEvent("LayerPushed", EVENT_ACTION_LAYER_PUSHED)
-  setActiveOnEvent("EndFastTravel", EVENT_END_FAST_TRAVEL_INTERACTION)
-  setActiveOnEvent("EndFastTravelKeep", EVENT_END_FAST_TRAVEL_KEEP_INTERACTION)
-  setActiveOnEvent("ClientInteract", EVENT_CLIENT_INTERACT_RESULT)
+  FPSManager.RegisterCallbacks()
 end
 
 function FPSManager.OnAddOnLoaded(_, addonName)
