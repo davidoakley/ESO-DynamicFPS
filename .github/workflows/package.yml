@@ -31,9 +31,9 @@ jobs:
     - name: Check out repository
       run: git clone https://github.com/davidoakley/ESO-FPSManager.git FPSManager
     - name: Create a zip file
-      run: cd FPSManager && git archive --format zip -o ../FPSManager_$INPUT_VERSION.zip main
+      run: cd FPSManager && git archive --format zip -o ../FPSManager_${{ inputs.version }}.zip main
     - name: Upload zip file to GitHub
       uses: actions/upload-artifact@v4
       with:
         name: zip
-        path: FPSManager_$INPUT_VERSION.zip
+        path: FPSManager_${{ inputs.version }}.zip
