@@ -28,12 +28,12 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Runs a single command using the runners shell
-    - checkout: Check out repository
+    - name: Check out repository
       run: git clone https://github.com/davidoakley/ESO-FPSManager.git FPSManager
-    - archive: Create a zip file
-      run: cd FPSManager && git archive --format zip -o FPSManager_$INPUT_VERSION.zip main
-    - artifact: Upload zip file to GitHub
+    - name: Create a zip file
+      run: cd FPSManager && git archive --format zip -o ../FPSManager_$INPUT_VERSION.zip main
+    - name: Upload zip file to GitHub
       uses: actions/upload-artifact@v4
       with:
         name: zip
-        path: FPSManager/FPSManager_$INPUT_VERSION.zip
+        path: FPSManager_$INPUT_VERSION.zip
