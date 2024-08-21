@@ -30,9 +30,13 @@ local IDLE_CHECK_DELAY_MS = 200
 
 -- local currentFPS = 0
 local currentState = nil
+
+---@type number
 local lastActiveTime = 0
+
 local hasFocus = true
 local isInCombat = false
+local isInDialog = false
 
 local activeLabelColour = ZO_TOOLTIP_DEFAULT_COLOR
 local idleLabelColour = ZO_ColorDef:New("c0ffa6")
@@ -56,7 +60,7 @@ function FPSManager.UpdateState()
 
   if isInCombat then
     state = "combat"
-  elseif GetGameTimeSeconds() < lastActiveTime + FPSManager.savedVars.idleDelay then
+  elseif GetGameTimeSeconds() < lastActiveTime + FPSManager.savedVars.idleDelay or isInDialog then
     state = "active"
   else
     state = "idle"
@@ -133,7 +137,7 @@ function FPSManager.Update()
     --logger:Debug("FPSManager: not idle")
     lastActiveTime = gameTime
   else
-    logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
+    -- logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
   end
   FPSManager.UpdateState()
 end
@@ -144,8 +148,28 @@ local function onCombatState(_, inCombat)
   FPSManager.SetActive()
 end
 
+local function onDialogBegin(_, optionCount)
+  isInDialog = true
+  logger:Debug("FPSManager: onDialogBegin "..optionCount)
+  FPSManager.SetActive()
+end
+
+local function onDialogEnd(_)
+  isInDialog = false
+  logger:Debug("FPSManager: onDialogEnd")
+  FPSManager.SetActive()
+end
+
+local function onDialogUpdate(_)
+  logger:Debug("FPSManager: onDialogUpdate")
+  FPSManager.SetActive()
+end
+
 local function setActiveOnEvent(eventName, event)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, FPSManager.SetActive)
+  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, function()
+    -- logger:Debug("FPSManager: event "..eventName)
+    FPSManager.SetActive()
+  end)
 end
 
 local function initialise()
@@ -160,6 +184,13 @@ local function initialise()
 
   EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, onCombatState)
 
+	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_BEGIN, onDialogBegin)
+	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CONVERSATION_UPDATED, onDialogUpdate)
+	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_OFFERED, onDialogUpdate)
+	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_COMPLETE_DIALOG, onDialogUpdate)
+	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_END, onDialogEnd)
+
+  setActiveOnEvent("PlayerActivated", EVENT_PLAYER_ACTIVATED)
   setActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
   setActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
   setActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
