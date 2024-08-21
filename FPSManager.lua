@@ -21,6 +21,7 @@ local defaultSavedVars = {
 
   showAlerts = false
 }
+FPSManager.savedVars = defaultSavedVars
 
 local logger = LibDebugLogger(FPSManager.name)
 FPSManager.logger = logger
