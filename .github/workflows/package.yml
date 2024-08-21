@@ -30,13 +30,10 @@ jobs:
     # Runs a single command using the runners shell
     - name: Check out repository
       run: git clone https://github.com/davidoakley/ESO-FPSManager.git FPSManager
-#    - name: Create a zip file
-#      run: cd FPSManager && git archive --format zip --prefix=FPSManager/ -o ../FPSManager_${{ inputs.version }}.zip main
+    - name: Create a zip file
+      run: cd FPSManager && git archive --format zip --prefix=FPSManager/ -o ../FPSManager_${{ inputs.version }}.zip main
     - name: Upload artifacts to GitHub
       uses: actions/upload-artifact@v4
       with:
-        name: FPSManager
-        path: |
-          FPSManager/*.lua
-          FPSManager/*.txt
-          FPSManager/README.md
+        name: ${{ inputs.version }}
+        path: FPSManager_${{ inputs.version }}.zip
