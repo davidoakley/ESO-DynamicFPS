@@ -58,17 +58,16 @@ end
 
 function FPSManager.UpdateState()
   local state
-  local gameTime = GetGameTimeSeconds()
+  local inactiveTime = GetGameTimeSeconds() - lastActiveTime
 
   if isInCombat then
     state = "combat"
-  elseif gameTime < lastActiveTime + FPSManager.savedVars.idleDelay or
-         (isInDialog and gameTime < lastActiveTime + FPSManager.savedVars.afkDelay) then
-    state = "active"
-  elseif gameTime < lastActiveTime + FPSManager.savedVars.afkDelay then
+  elseif inactiveTime >= FPSManager.savedVars.afkDelay then
+    state = "afk"
+  elseif inactiveTime >= FPSManager.savedVars.idleDelay and not isInDialog then
     state = "idle"
   else
-    state = "afk"
+    state = "active"
   end
 
   FPSManager.SetState(state)
