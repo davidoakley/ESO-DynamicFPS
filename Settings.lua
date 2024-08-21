@@ -16,6 +16,35 @@ function FPSManager.LoadSettings()
 
     local optionsTable = {}
 
+    table.insert(
+        optionsTable,
+        {
+            type = "checkbox",
+            name = "Enable dynamic FPS",
+            tooltip = "Enable to dynamically alter your monitor's refresh rate. Disable to keep it fixed.",
+            getFunc = function() return FPSManager.savedVars.enable end,
+            setFunc = function(value) FPSManager.savedVars.enable = value end,
+            width = "full", --or "half",
+            requiresReload = false,
+        }
+    )
+
+    table.insert(optionsTable, {
+        type = "slider",
+        name = "Static FPS",
+        tooltip = "Refresh rate when Dynamic FPS is disabled",
+        disabled = function() return FPSManager.savedVars.enable end,
+        min = 30,
+        max = 240,
+        step = 5,	--(optional)
+        getFunc = function() return FPSManager.savedVars.fixedFPS end,
+        setFunc = function(value) FPSManager.savedVars.fixedFPS = value end,
+        width = "full",	--or "half" (optional)
+        default = 100,	--(optional)
+    })
+
+    local disabledFunc = function() return not FPSManager.savedVars.enable end
+
     table.insert(optionsTable, {
         type = "header",
         name = ZO_HIGHLIGHT_TEXT:Colorize("Monitor Refresh Rate"),
@@ -27,6 +56,7 @@ function FPSManager.LoadSettings()
         title = nil,	--(optional)
         text = "Choose a refresh rate (FPS) for each game state. 60fps is standard for PC gaming, but your monitor may support higher values.",
         width = "full",	--or "half" (optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -40,6 +70,7 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.combatFPS = value end,
         width = "full",	--or "half" (optional)
         default = 60,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -53,6 +84,7 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.activeFPS = value end,
         width = "full",	--or "half" (optional)
         default = 60,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -66,6 +98,7 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.idleFPS = value end,
         width = "full",	--or "half" (optional)
         default = 30,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -79,12 +112,14 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.afkFPS = value end,
         width = "full",	--or "half" (optional)
         default = 10,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
         type = "header",
         name = ZO_HIGHLIGHT_TEXT:Colorize("Idle Timeouts"),
         width = "full",	--or "half" (optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -93,6 +128,7 @@ function FPSManager.LoadSettings()
         title = nil,	--(optional)
         text = "Choose how long before FPS Manager will switch your game to a lower FPS",
         width = "full",	--or "half" (optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -106,6 +142,7 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.idleDelay = value end,
         width = "full",	--or "half" (optional)
         default = 30,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
@@ -119,12 +156,14 @@ function FPSManager.LoadSettings()
         setFunc = function(value) FPSManager.savedVars.afkDelay = value end,
         width = "full",	--or "half" (optional)
         default = 60,	--(optional)
+        disabled = disabledFunc
     })
 
     table.insert(optionsTable, {
         type = "header",
         name = ZO_HIGHLIGHT_TEXT:Colorize("Other Settings"),
         width = "full",	--or "half" (optional)
+        disabled = disabledFunc
     })
 
     table.insert(
@@ -137,6 +176,7 @@ function FPSManager.LoadSettings()
             setFunc = function(value) FPSManager.savedVars.showAlerts = value end,
             width = "full", --or "half",
             requiresReload = false,
+            disabled = disabledFunc
         }
     )
 

@@ -16,7 +16,6 @@ FPSManager = {
 -- Default settings.
 local defaultSavedVars = {
   -- firstLoad = true,                   -- First time the addon is loaded ever.
-  -- accountWide = false,                -- Load settings from account savedVars, instead of character.
   activeFPS = 60,
   combatFPS = 165,
   idleFPS = 30,
@@ -25,7 +24,9 @@ local defaultSavedVars = {
   idleDelay = 30,
   afkDelay = 180,
 
-  showAlerts = false
+  showAlerts = false,
+  enabled = true,
+  fixedFPS = nil
 }
 FPSManager.savedVars = defaultSavedVars
 
@@ -162,6 +163,10 @@ local function initialise()
 
   FPSManager.originalMinFrameTime = GetCVar("MinFrameTime.2")
   logger:Info("FPSManager initialising; original MinFrameTime = "..FPSManager.originalMinFrameTime)
+
+  if FPSManager.savedVars.fixedFPS == nil then
+    FPSManager.savedVars.fixedFPS = math.floor(1 / FPSManager.originalMinFrameTime + 0.5)
+  end
 
   -- Settings menu in Settings.lua.
   FPSManager.LoadSettings()
