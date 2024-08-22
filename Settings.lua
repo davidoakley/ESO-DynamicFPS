@@ -14,7 +14,7 @@ function FPSManager.LoadSettings()
     registerForRefresh = true,
     registerForDefaults = true,
   }
-  LAM:RegisterAddonPanel(FPSManager.menuName, panelData)
+  FPSManager.settingsPanel = LAM:RegisterAddonPanel(FPSManager.menuName, panelData)
 
   local optionsTable = {}
 

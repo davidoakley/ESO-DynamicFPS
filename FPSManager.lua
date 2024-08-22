@@ -168,6 +168,17 @@ function FPSManager.OnEnabledChanged(enabled)
   end
 end
 
+local function onSlashCommand(extra)
+  if extra == "on" or extra == "enable" then
+    FPSManager.savedVars.enabled = true
+  elseif extra == "off" or extra == "disable" then
+    FPSManager.savedVars.enabled = false
+  elseif extra == "" or extra == nil then
+    LibAddonMenu2:OpenToPanel(FPSManager.settingsPanel)
+  end
+  FPSManager.OnEnabledChanged(FPSManager.savedVars.enabled)
+end
+
 local function initialise()
   FPSManager.savedVars = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, defaultSavedVars)
 
@@ -186,6 +197,7 @@ local function initialise()
 
   FPSManager.OnEnabledChanged(FPSManager.savedVars.enabled)
 
+  SLASH_COMMANDS["/fpsm"] = onSlashCommand
 end
 
 local function onAddOnLoaded(_, addonName)
