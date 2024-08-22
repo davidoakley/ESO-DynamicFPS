@@ -10,7 +10,9 @@ FPSManager = {
   isInDialog = false,
   hasFocus = true,
   paused = false,
-  originalMinFrameTime = 0.01
+  -- originalMinFrameTime = 0.01,
+  callbacksRegistered =false,
+  hooksRegistered = false,
 }
 
 -- Default settings.
@@ -56,10 +58,6 @@ function FPSManager.SetActive()
   FPSManager.UpdateState()
 end
 
-function FPSManager.ForceUpdateState()
-  currentState = nil
-end
-
 function FPSManager.UpdateState()
   local state
   local inactiveTime = GetGameTimeSeconds() - lastActiveTime
@@ -80,12 +78,12 @@ end
 ---Update FPSManager.currentState, and make any necessary game setting changes
 ---@param state string The state to update to
 function FPSManager.SetState(state)
-  if FPSManager.paused then return end
+  if FPSManager.paused or not FPSManager.savedVars.enabled then return end
 
   if state ~= currentState then
     local newFPS
     local newDelayMS
-    local colour
+    local colour = activeLabelColour
   
     if state == "combat" then
       newFPS = FPSManager.savedVars.combatFPS
@@ -126,8 +124,8 @@ end
 local x_old, y_old, h_old = GetMapPlayerPosition("player")
 local heading_old = GetPlayerCameraHeading()
 function FPSManager.Update()
-  if FPSManager.paused then return end
-  -- logger:Debug("FPSManager: IdleCheck")
+  if FPSManager.paused or not FPSManager.savedVars.enabled then return end
+  -- logger:Debug("FPSManager: Update")
 
   local function isPlayerIdle()
       -- Check if in combat
@@ -157,32 +155,47 @@ function FPSManager.Update()
   FPSManager.UpdateState()
 end
 
+function FPSManager.OnEnabledChanged(enabled)
+  if enabled then
+    logger:Info("FPSManager enabling")
+    FPSManager.SetActive()
+    FPSManager.RegisterCallbacks()
+  else
+    logger:Info("FPSManager disabling")
+    FPSManager.UnregisterCallbacks()
+    EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
+    SetCVar("MinFrameTime.2", ""..(1 / FPSManager.savedVars.fixedFPS))
+  end
+end
 
 local function initialise()
   FPSManager.savedVars = ZO_SavedVars:NewAccountWide(FPSManager.svName, 1, nil, defaultSavedVars)
 
-  FPSManager.originalMinFrameTime = GetCVar("MinFrameTime.2")
-  logger:Info("FPSManager initialising; original MinFrameTime = "..FPSManager.originalMinFrameTime)
-
-  if FPSManager.savedVars.fixedFPS == nil then
-    FPSManager.savedVars.fixedFPS = math.floor(1 / FPSManager.originalMinFrameTime + 0.5)
+  local originalMinFrameTime = GetCVar("MinFrameTime.2")
+  if FPSManager.savedVars.enabled then
+    logger:Info("FPSManager initialising")
+  else
+    logger:Info("FPSManager disabled - setting fixed "..FPSManager.savedVars.fixedFPS.."fps")
   end
 
-  -- Settings menu in Settings.lua.
+  if FPSManager.savedVars.fixedFPS == nil then
+    FPSManager.savedVars.fixedFPS = math.floor(1 / originalMinFrameTime + 0.5)
+  end
+
   FPSManager.LoadSettings()
 
-  FPSManager.SetActive()
+  FPSManager.OnEnabledChanged(FPSManager.savedVars.enabled)
 
-  FPSManager.RegisterCallbacks()
 end
 
-function FPSManager.OnAddOnLoaded(_, addonName)
+local function onAddOnLoaded(_, addonName)
   -- The event fires each time *any* addon loads - but we only care about when our own addon loads.
   if addonName ~= FPSManager.name then return end
 
   initialise()
+
   --unregister the event again as our addon was loaded now and we do not need it anymore to be run for each other addon that will load
   EVENT_MANAGER:UnregisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED)
 end
 
-EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED, FPSManager.OnAddOnLoaded)
+EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_ADD_ON_LOADED, onAddOnLoaded)
