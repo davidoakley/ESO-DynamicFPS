@@ -103,7 +103,7 @@ function FPSManager.SetState(state)
       colour = afkLabelColour
     end
   
-    EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_CheckIdle")
+    EVENT_MANAGER:UnregisterForUpdate(FPSManager.name.."_Update")
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
     ZO_PerformanceMetersFramerateMeterLabel:SetColor(colour:UnpackRGB())
     if newDelayMS > 0 then
