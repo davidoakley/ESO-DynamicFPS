@@ -10,7 +10,7 @@ function FPSManager.LoadSettings()
     displayName = FPSManager.menuName, -- FPSManager.Colorize(FPSManager.menuName),
     author = FPSManager.author, -- FPSManager.Colorize(FPSManager.author, "AAF0BB"),
     version = FPSManager.version,
-    slashCommand = "/fpsmanager",
+    -- slashCommand = "/fpsmanager",
     registerForRefresh = true,
     registerForDefaults = true,
   }
