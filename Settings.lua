@@ -1,4 +1,6 @@
 -- Settings menu.
+local logger = LibDebugLogger(FPSManager.name)
+
 function FPSManager.LoadSettings()
   local LAM = LibAddonMenu2
 
@@ -22,8 +24,11 @@ function FPSManager.LoadSettings()
       type = "checkbox",
       name = "Enable dynamic FPS",
       tooltip = "Enable to dynamically alter your monitor's refresh rate. Disable to keep it fixed.",
-      getFunc = function() return FPSManager.savedVars.enable end,
-      setFunc = function(value)FPSManager.savedVars.enable = value end,
+      getFunc = function() return FPSManager.savedVars.enabled end,
+      setFunc = function(value)
+        FPSManager.savedVars.enabled = value
+        FPSManager.OnEnabledChanged(value)
+        end,
       width = "full", --or "half",
       requiresReload = false,
     }
@@ -33,17 +38,23 @@ function FPSManager.LoadSettings()
     type = "slider",
     name = "Static FPS",
     tooltip = "Refresh rate when Dynamic FPS is disabled",
-    disabled = function() return FPSManager.savedVars.enable end,
+    disabled = function() return FPSManager.savedVars.enabled end,
     min = 30,
     max = 240,
     step = 5,	--(optional)
     getFunc = function() return FPSManager.savedVars.fixedFPS end,
-    setFunc = function(value) FPSManager.savedVars.fixedFPS = value end,
+    setFunc = function(value)
+      FPSManager.savedVars.fixedFPS = value
+      if not FPSManager.savedVars.enabled then
+        logger:Info("FPSManager setting to fixed "..FPSManager.savedVars.fixedFPS.."fps")
+        SetCVar("MinFrameTime.2", ""..(1 / FPSManager.savedVars.fixedFPS))
+      end
+    end,
     width = "full",	--or "half" (optional)
     default = 100,	--(optional)
   })
 
-  local disabledFunc = function() return not FPSManager.savedVars.enable end
+  local disabledFunc = function() return not FPSManager.savedVars.enabled end
 
   table.insert(optionsTable, {
     type = "header",
