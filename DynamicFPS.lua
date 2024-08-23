@@ -1,5 +1,5 @@
 DynamicFPS = {
-  name = "FPSManager",           -- Matches folder and Manifest file names.
+  name = "DynamicFPS",           -- Matches folder and Manifest file names.
   version = "0.1.0",                -- A nuisance to match to the Manifest.
   author = "SirNightstorm",
   color = "DDFFEE",             -- Used in menu titles and so on.
