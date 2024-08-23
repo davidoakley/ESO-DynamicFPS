@@ -3,7 +3,8 @@
 ## Author: SirNightstorm
 ## APIVersion: 101042
 ## Version: 0.1.0
-## DependsOn: LibDebugLogger>=180, LibAddonMenu-2.0
+## DependsOn: LibAddonMenu-2.0
+## OptionalDependsOn: LibDebugLogger>=180
 ## SavedVariables: DynamicFPS_SavedVariables
 
 DynamicFPS.lua

@@ -32,8 +32,9 @@ local defaultSavedVars = {
 }
 DynamicFPS.savedVars = defaultSavedVars
 
-local logger = LibDebugLogger(DynamicFPS.name)
-DynamicFPS.logger = logger
+if LibDebugLogger then
+  DynamicFPS.logger = LibDebugLogger(DynamicFPS.name)
+end
 
 local ACTIVE_CHECK_DELAY_MS = 1000
 local IDLE_CHECK_DELAY_MS = 200
@@ -51,6 +52,18 @@ local combatLabelColour = ZO_ColorDef:New("ff9966")
 
 local function ucFirst(str)
   return (str:gsub("^%l", string.upper))
+end
+
+function DynamicFPS.LogDebug(message)
+  if DynamicFPS.logger then
+    DynamicFPS.logger:Debug(message)
+  end
+end
+
+function DynamicFPS.LogInfo(message)
+  if DynamicFPS.logger then
+    DynamicFPS.logger:Info(message)
+  end
 end
 
 function DynamicFPS.SetActive()
@@ -107,10 +120,10 @@ function DynamicFPS.SetState(state)
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
     ZO_PerformanceMetersFramerateMeterLabel:SetColor(colour:UnpackRGB())
     if newDelayMS > 0 then
-      logger:Debug("Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
+      DynamicFPS.LogDebug("Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
       EVENT_MANAGER:RegisterForUpdate(DynamicFPS.name.."_Update", newDelayMS, DynamicFPS.Update)
     else
-      logger:Debug("Setting FPS to "..state..": "..newFPS.."fps")
+      DynamicFPS.LogDebug("Setting FPS to "..state..": "..newFPS.."fps")
     end
 
     if DynamicFPS.savedVars.showAlerts then
@@ -125,7 +138,7 @@ local x_old, y_old, h_old = GetMapPlayerPosition("player")
 local heading_old = GetPlayerCameraHeading()
 function DynamicFPS.Update()
   if DynamicFPS.paused or not DynamicFPS.savedVars.enabled then return end
-  -- logger:Debug("Update")
+  -- DynamicFPS.LogDebug("Update")
 
   local function isPlayerIdle()
       -- Check if in combat
@@ -147,21 +160,21 @@ function DynamicFPS.Update()
 
   local gameTime = GetGameTimeSeconds()
   if not isPlayerIdle() then
-    --logger:Debug("Not idle")
+    --DynamicFPS.LogDebug("Not idle")
     lastActiveTime = gameTime
   else
-    --logger:Debug("Idle "..(gameTime - lastActiveTime).."s")
+    --DynamicFPS.LogDebug("Idle "..(gameTime - lastActiveTime).."s")
   end
   DynamicFPS.UpdateState()
 end
 
 function DynamicFPS.OnEnabledChanged(enabled)
   if enabled then
-    logger:Info("Enabling")
+    DynamicFPS.LogInfo("Enabling")
     DynamicFPS.SetActive()
     DynamicFPS.RegisterCallbacks()
   else
-    logger:Info("Disabling")
+    DynamicFPS.LogInfo("Disabling")
     DynamicFPS.UnregisterCallbacks()
     EVENT_MANAGER:UnregisterForUpdate(DynamicFPS.name.."_CheckIdle")
     SetCVar("MinFrameTime.2", ""..(1 / DynamicFPS.savedVars.fixedFPS))
@@ -184,9 +197,9 @@ local function initialise()
 
   local originalMinFrameTime = GetCVar("MinFrameTime.2")
   if DynamicFPS.savedVars.enabled then
-    logger:Info("Initialising")
+    DynamicFPS.LogInfo("Initialising")
   else
-    logger:Info("Disabled - setting fixed "..DynamicFPS.savedVars.fixedFPS.."fps")
+    DynamicFPS.LogInfo("Disabled - setting fixed "..DynamicFPS.savedVars.fixedFPS.."fps")
   end
 
   if DynamicFPS.savedVars.fixedFPS == nil then

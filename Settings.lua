@@ -1,6 +1,4 @@
 -- Settings menu.
-local logger = LibDebugLogger(DynamicFPS.name)
-
 function DynamicFPS.LoadSettings()
   local LAM = LibAddonMenu2
   local sv = DynamicFPS.savedVars
@@ -47,7 +45,7 @@ function DynamicFPS.LoadSettings()
     setFunc = function(value)
       sv.fixedFPS = value
       if not sv.enabled then
-        logger:Info("Setting fixed "..sv.fixedFPS.."fps")
+        DynamicFPS.LogInfo("Setting fixed "..sv.fixedFPS.."fps")
         SetCVar("MinFrameTime.2", ""..(1 / sv.fixedFPS))
       end
     end,
