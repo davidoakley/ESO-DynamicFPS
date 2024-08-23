@@ -1,67 +1,102 @@
-local logger = LibDebugLogger(FPSManager.name)
+local logger = LibDebugLogger(DynamicFPS.name)
 
 local function onCombatState(_, inCombat)
-  FPSManager.isInCombat = inCombat
-  FPSManager.lastActiveTime = GetGameTimeSeconds()
-  FPSManager.SetActive()
+  DynamicFPS.isInCombat = inCombat
+  DynamicFPS.lastActiveTime = GetGameTimeSeconds()
+  DynamicFPS.SetActive()
 end
 
 local function onDialogBegin(_, optionCount)
-  FPSManager.isInDialog = true
-  FPSManager.logger:Debug("FPSManager: onDialogBegin "..optionCount)
-  FPSManager.SetActive()
+  DynamicFPS.isInDialog = true
+  logger:Debug("onDialogBegin "..optionCount)
+  DynamicFPS.SetActive()
 end
 
 local function onDialogEnd(_)
-  FPSManager.isInDialog = false
-  logger:Debug("FPSManager: onDialogEnd")
-  FPSManager.SetActive()
+  DynamicFPS.isInDialog = false
+  logger:Debug("onDialogEnd")
+  DynamicFPS.SetActive()
 end
 
 local function onDialogUpdate(_)
-  logger:Debug("FPSManager: onDialogUpdate")
-  FPSManager.SetActive()
+  logger:Debug("onDialogUpdate")
+  DynamicFPS.SetActive()
 end
 
 local function setActiveOnEvent(eventName, event)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, function()
-    -- logger:Debug("FPSManager: event "..eventName)
-    FPSManager.SetActive()
+  EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..eventName, event, function()
+    logger:Debug("event "..eventName)
+    DynamicFPS.SetActive()
   end)
 end
 
-local function onLogout(_)
-  logger:Info("FPSManager: onLogout; restoring MinFrameTime to "..FPSManager.originalMinFrameTime)
-  FPSManager.paused = true
-  SetCVar("MinFrameTime.2", ""..FPSManager.originalMinFrameTime)
+local function onLogoutHook(_)
+  if not DynamicFPS.savedVars.enabled then return end
+  logger:Info("onLogout; restoring to "..DynamicFPS.savedVars.fixedFPS.."fps")
+  DynamicFPS.paused = true
+  SetCVar("MinFrameTime.2", ""..(1 / DynamicFPS.savedVars.fixedFPS))
 end
 
-local function onLogoutCanceled(_)
-  logger:Info("FPSManager: onLogoutCanceled")
-  FPSManager.paused = false
-  FPSManager.SetActive()
+local function onLogoutCanceledHook(_)
+  if not DynamicFPS.savedVars.enabled then return end
+  logger:Info("onLogoutCanceled")
+  DynamicFPS.paused = false
+  DynamicFPS.SetActive()
 end
 
-function FPSManager.RegisterCallbacks()
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name.."_Combat", EVENT_PLAYER_COMBAT_STATE, onCombatState)
+--- @return table
+function DynamicFPS.GetCallbacks()
+  local callbacks = {
+    [EVENT_PLAYER_COMBAT_STATE] = { callback = onCombatState, name = "CombatState" },
 
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_BEGIN, onDialogBegin)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CONVERSATION_UPDATED, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_OFFERED, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_QUEST_COMPLETE_DIALOG, onDialogUpdate)
-	EVENT_MANAGER:RegisterForEvent(FPSManager.name, EVENT_CHATTER_END, onDialogEnd)
+    [EVENT_CHATTER_BEGIN] = { callback = onDialogBegin, name = "ChatterBegin" },
+    [EVENT_CONVERSATION_UPDATED] = { callback = onDialogUpdate, name = "ConversationUpdated" },
+    [EVENT_QUEST_OFFERED] = { callback = onDialogUpdate, name = "QuestOffered" },
+    [EVENT_QUEST_COMPLETE_DIALOG] = { callback = onDialogUpdate, name = "QuestComplete" },
+    [EVENT_CHATTER_END] = { callback = onDialogEnd, name = "ChatterEnd" },
 
-  setActiveOnEvent("PlayerActivated", EVENT_PLAYER_ACTIVATED)
-  setActiveOnEvent("UIMovement", EVENT_NEW_MOVEMENT_IN_UI_MODE)
-  setActiveOnEvent("MouseDown", EVENT_GLOBAL_MOUSE_DOWN)
-  setActiveOnEvent("MouseUp", EVENT_GLOBAL_MOUSE_UP)
-  setActiveOnEvent("LayerPopped", EVENT_ACTION_LAYER_POPPED)
-  setActiveOnEvent("LayerPushed", EVENT_ACTION_LAYER_PUSHED)
-  setActiveOnEvent("EndFastTravel", EVENT_END_FAST_TRAVEL_INTERACTION)
-  setActiveOnEvent("EndFastTravelKeep", EVENT_END_FAST_TRAVEL_KEEP_INTERACTION)
-  setActiveOnEvent("ClientInteract", EVENT_CLIENT_INTERACT_RESULT)
+    [EVENT_PLAYER_ACTIVATED] = { name = "PlayerActivated" },
+    [EVENT_NEW_MOVEMENT_IN_UI_MODE] = { name = "UIMovement" },
+    [EVENT_GLOBAL_MOUSE_DOWN] = { name = "MouseDown" },
+    [EVENT_GLOBAL_MOUSE_UP] = { name = "MouseUp" },
+    [EVENT_ACTION_LAYER_POPPED] = { name = "LayerPopped" },
+    [EVENT_ACTION_LAYER_PUSHED] = { name = "LayerPushed" },
+    [EVENT_END_FAST_TRAVEL_INTERACTION] = { name = "EndFastTravel" },
+    [EVENT_END_FAST_TRAVEL_KEEP_INTERACTION] = { name = "EndFastTravelKeep" },
+    [EVENT_CLIENT_INTERACT_RESULT] = { name = "ClientInteract" },
+  }
+  return callbacks
+end
 
-  ZO_PreHook("Logout", onLogout)
-  ZO_PreHook("Quit", onLogout)
-  ZO_PreHook("CancelLogout", onLogoutCanceled)
+function DynamicFPS.RegisterCallbacks()
+  if DynamicFPS.callbacksRegistered then return end
+
+  local callbacks = DynamicFPS.GetCallbacks()
+  for eventCode, data in pairs(callbacks) do
+    if data.callback ~= nil then
+      -- logger:Debug(eventCode..": "..data.name .. ": callback")
+      EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..data.name, eventCode, data.callback)
+    else
+      -- logger:Debug(eventCode..": "..data.name .. ": setActiveOnEvent")
+      setActiveOnEvent(data.name, eventCode)
+    end
+  end
+
+  if not DynamicFPS.hooksRegistered then
+    ZO_PreHook("Logout", onLogoutHook)
+    ZO_PreHook("Quit", onLogoutHook)
+    ZO_PreHook("CancelLogout", onLogoutCanceledHook)
+    DynamicFPS.hooksRegistered = true
+  end
+
+  DynamicFPS.callbacksRegistered = true
+end
+
+function DynamicFPS.UnregisterCallbacks()
+  if not DynamicFPS.callbacksRegistered then return end
+
+  local callbacks = DynamicFPS.GetCallbacks()
+  for eventCode, data in pairs(callbacks) do
+    EVENT_MANAGER:UnregisterForEvent(DynamicFPS.name, eventCode)
+  end
 end
