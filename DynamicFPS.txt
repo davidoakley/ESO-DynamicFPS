@@ -6,7 +6,7 @@
 ## DependsOn: LibDebugLogger>=180, LibAddonMenu-2.0
 ## SavedVariables: DynamicFPS_SavedVariables
 
-FPSManager.lua
+DynamicFPS.lua
 Settings.lua
 Callbacks.lua
 

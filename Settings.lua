@@ -12,7 +12,6 @@ function DynamicFPS.LoadSettings()
     displayName = DynamicFPS.menuName, -- DynamicFPS.Colorize(DynamicFPS.menuName),
     author = DynamicFPS.author, -- DynamicFPS.Colorize(DynamicFPS.author, "AAF0BB"),
     version = DynamicFPS.version,
-    -- slashCommand = "/fpsmanager",
     registerForRefresh = true,
     registerForDefaults = true,
   }
@@ -139,7 +138,7 @@ function DynamicFPS.LoadSettings()
     type = "description",
     -- title = "Idle Timeouts",	--(optional)
     title = nil,	--(optional)
-    text = "Choose how long before FPS Manager will switch your game to a lower FPS",
+    text = "Choose how long before your game will switch to a lower FPS",
     width = "full",	--or "half" (optional)
     disabled = disabledFunc
   })
@@ -184,7 +183,7 @@ function DynamicFPS.LoadSettings()
     {
       type = "checkbox",
       name = "Show alerts",
-      tooltip = "Show an alert in the top-right corner of the screen when FPSManager's state changes",
+      tooltip = "Show an alert in the top-right corner of the screen when Dynamic FPS's state changes",
       getFunc = function() return sv.showAlerts end,
       setFunc = function(value) sv.showAlerts = value end,
       width = "full", --or "half",
