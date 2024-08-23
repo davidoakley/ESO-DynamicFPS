@@ -107,14 +107,14 @@ function FPSManager.SetState(state)
     SetCVar("MinFrameTime.2", ""..(1 / newFPS))
     ZO_PerformanceMetersFramerateMeterLabel:SetColor(colour:UnpackRGB())
     if newDelayMS > 0 then
-      logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
+      logger:Debug("Setting FPS to "..state..": "..newFPS.."fps, idle check every "..newDelayMS.."ms")
       EVENT_MANAGER:RegisterForUpdate(FPSManager.name.."_Update", newDelayMS, FPSManager.Update)
     else
-      logger:Debug("FPSManager: Setting FPS to "..state..": "..newFPS.."fps")
+      logger:Debug("Setting FPS to "..state..": "..newFPS.."fps")
     end
 
     if FPSManager.savedVars.showAlerts then
-      ZO_Alert(UI_ALERT_CATEGORY_ALERT, nil, "FPSManager: "..ucFirst(state))
+      ZO_Alert(UI_ALERT_CATEGORY_ALERT, nil, ucFirst(state))
     end
     -- currentFPS = newFPS
     currentState = state
@@ -125,7 +125,7 @@ local x_old, y_old, h_old = GetMapPlayerPosition("player")
 local heading_old = GetPlayerCameraHeading()
 function FPSManager.Update()
   if FPSManager.paused or not FPSManager.savedVars.enabled then return end
-  -- logger:Debug("FPSManager: Update")
+  -- logger:Debug("Update")
 
   local function isPlayerIdle()
       -- Check if in combat
@@ -147,10 +147,10 @@ function FPSManager.Update()
 
   local gameTime = GetGameTimeSeconds()
   if not isPlayerIdle() then
-    --logger:Debug("FPSManager: not idle")
+    --logger:Debug("Not idle")
     lastActiveTime = gameTime
   else
-    --logger:Debug("FPSManager: Idle "..(gameTime - lastActiveTime).."s")
+    --logger:Debug("Idle "..(gameTime - lastActiveTime).."s")
   end
   FPSManager.UpdateState()
 end
