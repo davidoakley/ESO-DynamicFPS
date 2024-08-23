@@ -1,11 +1,10 @@
-## Title: FPS Manager
-## Description: Reduces the FPS when your game is idle
-## Author: SirNightstorm (PC-EU)
+## Title: Dynamic FPS
+## Description: Dynamically changes your max FPS to match your current (in)activity
+## Author: SirNightstorm
 ## APIVersion: 101042
 ## Version: 0.1.0
-## DependsOn: LibDebugLogger>=180
-## OptionalDependsOn: pchat
-## SavedVariables: FPSManager_SavedVariables
+## DependsOn: LibDebugLogger>=180, LibAddonMenu-2.0
+## SavedVariables: DynamicFPS_SavedVariables
 
 FPSManager.lua
 Settings.lua

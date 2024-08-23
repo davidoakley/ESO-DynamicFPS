@@ -1,22 +1,22 @@
 -- Settings menu.
-local logger = LibDebugLogger(FPSManager.name)
+local logger = LibDebugLogger(DynamicFPS.name)
 
-function FPSManager.LoadSettings()
+function DynamicFPS.LoadSettings()
   local LAM = LibAddonMenu2
-  local sv = FPSManager.savedVars
+  local sv = DynamicFPS.savedVars
   if sv == nil then return end
 
   local panelData = {
     type = "panel",
-    name = FPSManager.menuName,
-    displayName = FPSManager.menuName, -- FPSManager.Colorize(FPSManager.menuName),
-    author = FPSManager.author, -- FPSManager.Colorize(FPSManager.author, "AAF0BB"),
-    version = FPSManager.version,
+    name = DynamicFPS.menuName,
+    displayName = DynamicFPS.menuName, -- DynamicFPS.Colorize(DynamicFPS.menuName),
+    author = DynamicFPS.author, -- DynamicFPS.Colorize(DynamicFPS.author, "AAF0BB"),
+    version = DynamicFPS.version,
     -- slashCommand = "/fpsmanager",
     registerForRefresh = true,
     registerForDefaults = true,
   }
-  FPSManager.settingsPanel = LAM:RegisterAddonPanel(FPSManager.menuName, panelData)
+  DynamicFPS.settingsPanel = LAM:RegisterAddonPanel(DynamicFPS.menuName, panelData)
 
   local optionsTable = {}
 
@@ -26,10 +26,10 @@ function FPSManager.LoadSettings()
       type = "checkbox",
       name = "Enable dynamic FPS",
       tooltip = "Enable to dynamically alter your monitor's refresh rate. Disable to keep it fixed.",
-      getFunc = function() return FPSManager.savedVars.enabled end,
+      getFunc = function() return DynamicFPS.savedVars.enabled end,
       setFunc = function(value)
         sv.enabled = value
-        FPSManager.OnEnabledChanged(value)
+        DynamicFPS.OnEnabledChanged(value)
         end,
       width = "full", --or "half",
       requiresReload = false,
@@ -48,7 +48,7 @@ function FPSManager.LoadSettings()
     setFunc = function(value)
       sv.fixedFPS = value
       if not sv.enabled then
-        logger:Info("FPSManager setting to fixed "..sv.fixedFPS.."fps")
+        logger:Info("Setting fixed "..sv.fixedFPS.."fps")
         SetCVar("MinFrameTime.2", ""..(1 / sv.fixedFPS))
       end
     end,
@@ -193,5 +193,5 @@ function FPSManager.LoadSettings()
     }
   )
 
-  LAM:RegisterOptionControls(FPSManager.menuName, optionsTable)
+  LAM:RegisterOptionControls(DynamicFPS.menuName, optionsTable)
 end

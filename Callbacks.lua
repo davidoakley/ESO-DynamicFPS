@@ -1,51 +1,51 @@
-local logger = LibDebugLogger(FPSManager.name)
+local logger = LibDebugLogger(DynamicFPS.name)
 
 local function onCombatState(_, inCombat)
-  FPSManager.isInCombat = inCombat
-  FPSManager.lastActiveTime = GetGameTimeSeconds()
-  FPSManager.SetActive()
+  DynamicFPS.isInCombat = inCombat
+  DynamicFPS.lastActiveTime = GetGameTimeSeconds()
+  DynamicFPS.SetActive()
 end
 
 local function onDialogBegin(_, optionCount)
-  FPSManager.isInDialog = true
+  DynamicFPS.isInDialog = true
   logger:Debug("onDialogBegin "..optionCount)
-  FPSManager.SetActive()
+  DynamicFPS.SetActive()
 end
 
 local function onDialogEnd(_)
-  FPSManager.isInDialog = false
+  DynamicFPS.isInDialog = false
   logger:Debug("onDialogEnd")
-  FPSManager.SetActive()
+  DynamicFPS.SetActive()
 end
 
 local function onDialogUpdate(_)
   logger:Debug("onDialogUpdate")
-  FPSManager.SetActive()
+  DynamicFPS.SetActive()
 end
 
 local function setActiveOnEvent(eventName, event)
-  EVENT_MANAGER:RegisterForEvent(FPSManager.name..eventName, event, function()
+  EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..eventName, event, function()
     logger:Debug("event "..eventName)
-    FPSManager.SetActive()
+    DynamicFPS.SetActive()
   end)
 end
 
 local function onLogoutHook(_)
-  if not FPSManager.savedVars.enabled then return end
-  logger:Info("onLogout; restoring to "..FPSManager.savedVars.fixedFPS.."fps")
-  FPSManager.paused = true
-  SetCVar("MinFrameTime.2", ""..(1 / FPSManager.savedVars.fixedFPS))
+  if not DynamicFPS.savedVars.enabled then return end
+  logger:Info("onLogout; restoring to "..DynamicFPS.savedVars.fixedFPS.."fps")
+  DynamicFPS.paused = true
+  SetCVar("MinFrameTime.2", ""..(1 / DynamicFPS.savedVars.fixedFPS))
 end
 
 local function onLogoutCanceledHook(_)
-  if not FPSManager.savedVars.enabled then return end
+  if not DynamicFPS.savedVars.enabled then return end
   logger:Info("onLogoutCanceled")
-  FPSManager.paused = false
-  FPSManager.SetActive()
+  DynamicFPS.paused = false
+  DynamicFPS.SetActive()
 end
 
 --- @return table
-function FPSManager.GetCallbacks()
+function DynamicFPS.GetCallbacks()
   local callbacks = {
     [EVENT_PLAYER_COMBAT_STATE] = { callback = onCombatState, name = "CombatState" },
 
@@ -68,35 +68,35 @@ function FPSManager.GetCallbacks()
   return callbacks
 end
 
-function FPSManager.RegisterCallbacks()
-  if FPSManager.callbacksRegistered then return end
+function DynamicFPS.RegisterCallbacks()
+  if DynamicFPS.callbacksRegistered then return end
 
-  local callbacks = FPSManager.GetCallbacks()
+  local callbacks = DynamicFPS.GetCallbacks()
   for eventCode, data in pairs(callbacks) do
     if data.callback ~= nil then
       -- logger:Debug(eventCode..": "..data.name .. ": callback")
-      EVENT_MANAGER:RegisterForEvent(FPSManager.name..data.name, eventCode, data.callback)
+      EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..data.name, eventCode, data.callback)
     else
       -- logger:Debug(eventCode..": "..data.name .. ": setActiveOnEvent")
       setActiveOnEvent(data.name, eventCode)
     end
   end
 
-  if not FPSManager.hooksRegistered then
+  if not DynamicFPS.hooksRegistered then
     ZO_PreHook("Logout", onLogoutHook)
     ZO_PreHook("Quit", onLogoutHook)
     ZO_PreHook("CancelLogout", onLogoutCanceledHook)
-    FPSManager.hooksRegistered = true
+    DynamicFPS.hooksRegistered = true
   end
 
-  FPSManager.callbacksRegistered = true
+  DynamicFPS.callbacksRegistered = true
 end
 
-function FPSManager.UnregisterCallbacks()
-  if not FPSManager.callbacksRegistered then return end
+function DynamicFPS.UnregisterCallbacks()
+  if not DynamicFPS.callbacksRegistered then return end
 
-  local callbacks = FPSManager.GetCallbacks()
+  local callbacks = DynamicFPS.GetCallbacks()
   for eventCode, data in pairs(callbacks) do
-    EVENT_MANAGER:UnregisterForEvent(FPSManager.name, eventCode)
+    EVENT_MANAGER:UnregisterForEvent(DynamicFPS.name, eventCode)
   end
 end
