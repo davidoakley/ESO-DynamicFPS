@@ -28,6 +28,10 @@ before re-disabling the AddOn. You can also
 - Colour the FPS counter to show Dynamic FPS's current state
 - Show in the top-right corner of the screen when Dynamic FPS changes states
 
+## Required Libraries ##
+
+- LibAddonMenu-2.0
+
 ## Settings ##
 
 ![Settings](media/settings.jpg)

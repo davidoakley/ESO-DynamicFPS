@@ -1,5 +1,3 @@
-local logger = LibDebugLogger(DynamicFPS.name)
-
 local function onCombatState(_, inCombat)
   DynamicFPS.isInCombat = inCombat
   DynamicFPS.lastActiveTime = GetGameTimeSeconds()
@@ -8,38 +6,38 @@ end
 
 local function onDialogBegin(_, optionCount)
   DynamicFPS.isInDialog = true
-  logger:Debug("onDialogBegin "..optionCount)
+  DynamicFPS.LogDebug("onDialogBegin "..optionCount)
   DynamicFPS.SetActive()
 end
 
 local function onDialogEnd(_)
   DynamicFPS.isInDialog = false
-  logger:Debug("onDialogEnd")
+  DynamicFPS.LogDebug("onDialogEnd")
   DynamicFPS.SetActive()
 end
 
 local function onDialogUpdate(_)
-  logger:Debug("onDialogUpdate")
+  DynamicFPS.LogDebug("onDialogUpdate")
   DynamicFPS.SetActive()
 end
 
 local function setActiveOnEvent(eventName, event)
   EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..eventName, event, function()
-    logger:Debug("event "..eventName)
+    DynamicFPS.LogDebug("event "..eventName)
     DynamicFPS.SetActive()
   end)
 end
 
 local function onLogoutHook(_)
   if not DynamicFPS.savedVars.enabled then return end
-  logger:Info("onLogout; restoring to "..DynamicFPS.savedVars.fixedFPS.."fps")
+  DynamicFPS.LogInfo("onLogout; restoring to "..DynamicFPS.savedVars.fixedFPS.."fps")
   DynamicFPS.paused = true
   SetCVar("MinFrameTime.2", ""..(1 / DynamicFPS.savedVars.fixedFPS))
 end
 
 local function onLogoutCanceledHook(_)
   if not DynamicFPS.savedVars.enabled then return end
-  logger:Info("onLogoutCanceled")
+  DynamicFPS.LogInfo("onLogoutCanceled")
   DynamicFPS.paused = false
   DynamicFPS.SetActive()
 end
@@ -74,10 +72,10 @@ function DynamicFPS.RegisterCallbacks()
   local callbacks = DynamicFPS.GetCallbacks()
   for eventCode, data in pairs(callbacks) do
     if data.callback ~= nil then
-      -- logger:Debug(eventCode..": "..data.name .. ": callback")
+      -- DynamicFPS.LogDebug(eventCode..": "..data.name .. ": callback")
       EVENT_MANAGER:RegisterForEvent(DynamicFPS.name..data.name, eventCode, data.callback)
     else
-      -- logger:Debug(eventCode..": "..data.name .. ": setActiveOnEvent")
+      -- DynamicFPS.LogDebug(eventCode..": "..data.name .. ": setActiveOnEvent")
       setActiveOnEvent(data.name, eventCode)
     end
   end
