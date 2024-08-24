@@ -10,6 +10,8 @@ local function logCallback(eventCode, message)
   end
   if DynamicFPS.isInDialog then
     message = message.." (inDialog)"
+  elseif DynamicFPS.isScrying then
+    message = message.." (isScrying)"
   end
   if callbacks[eventCode] ~= nil then
     DynamicFPS.LogDebug("> "..callbacks[eventCode].name..message)
@@ -18,22 +20,40 @@ local function logCallback(eventCode, message)
   end
 end
 
-function Callback.OnCombatState(eventCode, inCombat)
+function Callback.OnCombatState(_, inCombat)
   DynamicFPS.isInCombat = inCombat
+  DynamicFPS.isScrying = false
   DynamicFPS.lastActiveTime = GetGameTimeSeconds()
-  logCallback(eventCode)
   DynamicFPS.SetActive()
 end
 
 function Callback.OnDialogBegin(eventCode)
   DynamicFPS.isInDialog = true
+  DynamicFPS.isScrying = false
   logCallback(eventCode)
   DynamicFPS.SetActive()
 end
 
 function Callback.OnDialogEnd(eventCode)
   DynamicFPS.isInDialog = false
+  DynamicFPS.isScrying = false
   logCallback(eventCode)
+  DynamicFPS.SetActive()
+end
+
+function Callback.OnScryingResult(eventCode, result)
+  if result == 0 then
+    DynamicFPS.isScrying = true
+    logCallback(eventCode, "result="..result)
+  end
+  DynamicFPS.SetActive()
+end
+
+function Callback.OnScryingExit(eventCode, accept)
+  if accept then
+    DynamicFPS.isScrying = false
+    logCallback(eventCode, "accept="..tostring(accept))
+  end
   DynamicFPS.SetActive()
 end
 
@@ -111,4 +131,15 @@ callbacks = {
   [EVENT_QUEST_OFFERED] = { name = "QuestOffered" },
   [EVENT_QUEST_COMPLETE_DIALOG] = { name = "QuestComplete" },
   [EVENT_CHATTER_END] = { callback = Callback.OnDialogEnd, name = "ChatterEnd" },
+
+  -- Antiquity scrying screen
+  [EVENT_ANTIQUITY_SCRYING_RESULT] = { callback = Callback.OnScryingResult, name = "AntiquityScryResult"},
+  [EVENT_SCRYING_EXIT_RESPONSE] = { callback = Callback.OnScryingExit, name = "AntiquityScryExit"},
+
+  -- Antiquity dig screen
+  [EVENT_ANTIQUITY_DIGGING_READY_TO_PLAY] = { callback = Callback.OnDialogBegin, name = "AntiquityDigReady"},
+  [EVENT_ANTIQUITY_DIGGING_EXIT_RESPONSE] = { callback = Callback.OnDialogEnd, name = "AntiquityDigExit"},
+  [EVENT_ANTIQUITY_DIGGING_NUM_RADARS_REMAINING_CHANGED] = { name = "AntiquityDigRadars"},
+  [EVENT_ANTIQUITY_DIG_SPOT_DIG_POWER_CHANGED] = { name = "AntiquityDigPowerChanged"},
+  [EVENT_ANTIQUITY_DIGGING_MOUSE_OVER_ACTIVE_SKILL_CHANGED] = { name = "AntiquityDigMouseOver" }
 }

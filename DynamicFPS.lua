@@ -8,6 +8,7 @@ DynamicFPS = {
 
   isInCombat = false,
   isInDialog = false,
+  isScrying = false,
   hasFocus = true,
   paused = false,
   -- originalMinFrameTime = 0.01,
@@ -77,9 +78,9 @@ function DynamicFPS.UpdateState()
 
   if DynamicFPS.isInCombat then
     state = "combat"
-  elseif inactiveTime >= DynamicFPS.savedVars.afkDelay then
+  elseif inactiveTime >= DynamicFPS.savedVars.afkDelay and not DynamicFPS.isScrying then
     state = "afk"
-  elseif inactiveTime >= DynamicFPS.savedVars.idleDelay and not DynamicFPS.isInDialog then
+  elseif inactiveTime >= DynamicFPS.savedVars.idleDelay and not DynamicFPS.isInDialog and not DynamicFPS.isScrying then
     state = "idle"
   else
     state = "active"
