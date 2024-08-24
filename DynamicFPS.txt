@@ -2,7 +2,7 @@
 ## Description: Dynamically changes your max FPS to match your current (in)activity
 ## Author: SirNightstorm
 ## APIVersion: 101043
-## Version: 0.1.1
+## Version: 0.1.2
 ## DependsOn: LibAddonMenu-2.0
 ## OptionalDependsOn: LibDebugLogger>=180
 ## SavedVariables: DynamicFPS_SavedVariables
