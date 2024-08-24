@@ -20,7 +20,7 @@ The addon will always try and restore the game's maximum frame rate to the Fixed
 
 ## Required Libraries ##
 
-- LibaddonMenu-2.0
+- LibAddonMenu-2.0
 
 ## Settings ##
 
