@@ -22,7 +22,7 @@ function DynamicFPS.LoadSettings()
     {
       type = "checkbox",
       name = "Enable dynamic FPS",
-      tooltip = "Enable to dynamically alter your monitor's refresh rate. Disable to keep it fixed.",
+      tooltip = "Enable to dynamically alter your monitor's max FPS. Disable to keep it fixed.",
       getFunc = function() return DynamicFPS.savedVars.enabled end,
       setFunc = function(value)
         sv.enabled = value
@@ -36,7 +36,7 @@ function DynamicFPS.LoadSettings()
   table.insert(optionsTable, {
     type = "slider",
     name = "Static FPS",
-    tooltip = "Refresh rate when Dynamic FPS is disabled",
+    tooltip = "Max FPS when Dynamic FPS is disabled",
     disabled = function() return sv.enabled end,
     min = 30,
     max = 240,
@@ -57,14 +57,14 @@ function DynamicFPS.LoadSettings()
 
   table.insert(optionsTable, {
     type = "header",
-    name = ZO_HIGHLIGHT_TEXT:Colorize("Monitor Refresh Rate"),
+    name = ZO_HIGHLIGHT_TEXT:Colorize("Maximum Frame Rates"),
     width = "full",	--or "half" (optional)
   })
 
   table.insert(optionsTable, {
     type = "description",
     title = nil,	--(optional)
-    text = "Choose a refresh rate (FPS) for each game state. 60fps is standard for PC gaming, but your monitor may support higher values.",
+    text = "Choose a max FPS for each game state. 60fps is standard for PC gaming, but your monitor may support higher values.",
     width = "full",	--or "half" (optional)
     disabled = disabledFunc
   })
