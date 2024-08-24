@@ -173,7 +173,6 @@ function DynamicFPS.LoadSettings()
     type = "header",
     name = ZO_HIGHLIGHT_TEXT:Colorize("Other Settings"),
     width = "full",	--or "half" (optional)
-    disabled = disabledFunc
   })
 
   table.insert(
@@ -185,8 +184,7 @@ function DynamicFPS.LoadSettings()
       getFunc = function() return sv.showAlerts end,
       setFunc = function(value) sv.showAlerts = value end,
       width = "full", --or "half",
-      requiresReload = false,
-      disabled = disabledFunc
+      requiresReload = false
     }
   )
 
