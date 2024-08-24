@@ -188,5 +188,20 @@ function DynamicFPS.LoadSettings()
     }
   )
 
+  if LibDebugLogger then
+    table.insert(
+      optionsTable,
+      {
+        type = "checkbox",
+        name = "Enable logging",
+        tooltip = "Write detailed log entries to LibDebugLogger",
+        getFunc = function() return sv.logging end,
+        setFunc = function(value) sv.logging = value end,
+        width = "full", --or "half",
+        requiresReload = false
+      }
+    )
+  end
+
   LAM:RegisterOptionControls(DynamicFPS.menuName, optionsTable)
 end
