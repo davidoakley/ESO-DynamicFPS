@@ -8,6 +8,7 @@ DynamicFPS = {
 
   isInCombat = false,
   isInDialog = false,
+  isScrying = false,
   hasFocus = true,
   paused = false,
   -- originalMinFrameTime = 0.01,
@@ -27,6 +28,7 @@ local defaultSavedVars = {
   afkDelay = 180,
 
   showAlerts = false,
+  logging = false,
   enabled = true,
   fixedFPS = nil
 }
@@ -55,13 +57,13 @@ local function ucFirst(str)
 end
 
 function DynamicFPS.LogDebug(message)
-  if DynamicFPS.logger then
+  if DynamicFPS.savedVars.logging and DynamicFPS.logger then
     DynamicFPS.logger:Debug(message)
   end
 end
 
 function DynamicFPS.LogInfo(message)
-  if DynamicFPS.logger then
+  if DynamicFPS.savedVars.logging and DynamicFPS.logger then
     DynamicFPS.logger:Info(message)
   end
 end
@@ -77,9 +79,9 @@ function DynamicFPS.UpdateState()
 
   if DynamicFPS.isInCombat then
     state = "combat"
-  elseif inactiveTime >= DynamicFPS.savedVars.afkDelay then
+  elseif inactiveTime >= DynamicFPS.savedVars.afkDelay and not DynamicFPS.isScrying then
     state = "afk"
-  elseif inactiveTime >= DynamicFPS.savedVars.idleDelay and not DynamicFPS.isInDialog then
+  elseif inactiveTime >= DynamicFPS.savedVars.idleDelay and not DynamicFPS.isInDialog and not DynamicFPS.isScrying then
     state = "idle"
   else
     state = "active"
@@ -184,12 +186,19 @@ end
 local function onSlashCommand(extra)
   if extra == "on" or extra == "enable" then
     DynamicFPS.savedVars.enabled = true
+    DynamicFPS.OnEnabledChanged(true)
   elseif extra == "off" or extra == "disable" then
     DynamicFPS.savedVars.enabled = false
+    DynamicFPS.OnEnabledChanged(false)
+  elseif extra == "logging on" then
+    DynamicFPS.savedVars.logging = true
+  elseif extra == "logging off" then
+    DynamicFPS.savedVars.logging = false
   elseif extra == "" or extra == nil then
     LibAddonMenu2:OpenToPanel(DynamicFPS.settingsPanel)
+  else
+    d("DynamicFPS: Unknown sub-command '"..extra.."'")
   end
-  DynamicFPS.OnEnabledChanged(DynamicFPS.savedVars.enabled)
 end
 
 local function initialise()
