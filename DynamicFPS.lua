@@ -1,6 +1,6 @@
 DynamicFPS = {
   name = "DynamicFPS",           -- Matches folder and Manifest file names.
-  version = "0.1.1",                -- A nuisance to match to the Manifest.
+  version = "0.1.2",                -- A nuisance to match to the Manifest.
   author = "SirNightstorm",
   color = "DDFFEE",             -- Used in menu titles and so on.
   menuName = "Dynamic FPS",          -- A UNIQUE identifier for menu object.
